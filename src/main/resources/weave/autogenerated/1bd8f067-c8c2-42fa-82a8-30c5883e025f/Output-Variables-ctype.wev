@@ -1,0 +1,4 @@
+%dw 2.0
+
+type auto_1bd8f067_c8c2_42fa_82a8_30c5883e025f_Output_Variables_ctype = "business" | "personal"
+

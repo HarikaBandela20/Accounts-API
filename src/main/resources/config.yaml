@@ -1,0 +1,16 @@
+http:
+  port: "8081"
+  
+accounts:
+  host: "diy-accounts-api.us-w2.cloudhub.io"
+  port: "80"
+  basePath: "/"
+  protocol: "HTTP"
+  client_id: "0780b2ea34284f828a92c45dca89b64f"
+  client_secret: "8c13ceE83caD462B859c64efa460b526"
+  
+transactions:
+  wsdl: "http://apdev-accounts-ws.cloudhub.io/api/transactions?wsdl"
+  service: "TransactionServiceService"
+  port: "TransactionServicePort"
+  address: "http://apdev-accounts-ws.cloudhub.io/api/transactions"

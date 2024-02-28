@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:wsc="http://www.mulesoft.org/schema/mule/wsc"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/wsc http://www.mulesoft.org/schema/mule/wsc/current/mule-wsc.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="transactionsFlow" doc:id="3390597d-f27b-45c7-a40f-d416ddc2dc3b" >
+		<http:listener doc:name="GET /accounts/transactions" doc:id="d9687518-d7b7-4d87-adb2-512202e5ad2a" config-ref="HTTP_Listener_config" path="/accounts/transactions"/>
+		<set-variable value="#[attributes.headers.user_id]" doc:name="user_id" doc:id="39b3d066-c5c3-41ca-8018-2103fe744072" variableName="user_id"/>
+		<wsc:consume doc:name="Consume" doc:id="49736261-c35e-4aa8-8733-4594e074d992" config-ref="Web_Service_Consumer_Config" operation="GetTransactionsforCustomers"/>
+		<ee:transform doc:name="Transform Message" doc:id="f97d8702-6001-49fd-8ad4-93339e3349f8" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="c6dfa78e-3dbf-4f98-8ea7-e8b8c499a391" />
+	</flow>
+</mule>

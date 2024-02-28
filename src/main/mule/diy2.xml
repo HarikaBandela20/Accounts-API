@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:validation="http://www.mulesoft.org/schema/mule/validation" xmlns:wsc="http://www.mulesoft.org/schema/mule/wsc"
+	xmlns:accounts-api="http://www.mulesoft.org/schema/mule/accounts-api"
+	xmlns:vm="http://www.mulesoft.org/schema/mule/vm" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/vm http://www.mulesoft.org/schema/mule/vm/current/mule-vm.xsd
+http://www.mulesoft.org/schema/mule/accounts-api http://www.mulesoft.org/schema/mule/accounts-api/current/mule-accounts-api.xsd
+http://www.mulesoft.org/schema/mule/wsc http://www.mulesoft.org/schema/mule/wsc/current/mule-wsc.xsd
+http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd">
+	<flow name="GetAccounts" doc:id="3d20cf50-4725-4f6d-9c9f-14bdd4edea41" >
+		<http:listener doc:name="Get /accounts" doc:id="af4cf95b-3786-4ad9-bd98-596085727371" config-ref="HTTP_Listener_config" path="/accounts" allowedMethods="GET"/>
+		<flow-ref doc:name="Ref_for_id_logger" doc:id="52b6db62-d121-4fd7-84e6-b3320993c3cf" name="ref_for_flogger_var"/>
+		<flow-ref doc:name="validations" doc:id="b140c924-bb1b-4b46-b60f-ae4ceed1a387" name="name_type"/>
+		<choice doc:name="Choice" doc:id="9772c605-9cc2-4594-b1b8-3448e8e705cc" >
+			<when expression="#[vars.condition == 'AND']">
+				<accounts-api:get-accounts doc:name="Get accounts by name and type" doc:id="3ac71f5f-2470-4483-ad61-ec544bb6372d" config-ref="Accounts_API_Config" user-id="#[vars.ID]" client-id="${accounts.client_id}" client-secret="${accounts.client_secret}" account-name="#[vars.cname]" account-type="#[vars.ctype]"/>
+			</when>
+			<otherwise>
+				<flow-ref doc:name="or-condition" doc:id="c86a5e0b-f160-4a35-8c3c-7ca88e04e928" name="Or_condition"/>
+			</otherwise>
+		</choice>
+		<set-variable value="#[sizeOf(payload)]" doc:name="numberofacconuts" doc:id="0d8e9c4f-54d0-498d-a6ab-5aed11db30c4" variableName="numberofacconuts"/>
+		<ee:transform doc:name="Transform Message" doc:id="0f3c9271-a255-4696-87db-2ac2a6272907" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/xml
+---
+transactions: {(payload map {
+	transaction: {
+		id: $.id, 
+		name: $.name,
+		account_type: $.'type',
+		address: $.address,
+		creation_time: $.created_at,
+		miles: $.air_miles
+	}
+})}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<ee:transform doc:name="Transform Message" doc:id="96dd3612-d3e8-41cc-a2c6-9308ee9c3191" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+(payload.transactions map {
+    id: $.id, 
+    name: $.name,
+    account_type: $.'type',
+    address: $.address,
+    creation_time: $.created_at,
+    miles: $.air_miles
+})
+
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<flow-ref doc:name="Flow Reference" doc:id="3898775a-659e-4a79-b41d-38f1e7dc03da" name="ref_for_last_logger"/>
+		<error-handler ref="Error_Handler_main_flow"/>
+	</flow>
+	<flow name="Or_condition" doc:id="72225fec-3eb1-4f16-851f-cbdf8573309b" >
+		<scatter-gather doc:name="Scatter-Gather" doc:id="fc433e95-0d0e-46c4-9b07-cc90461a4049" >
+			<route >
+				<accounts-api:get-accounts doc:name="Get accounts by name" doc:id="af5b576b-d7ad-4c3c-8a1d-dc5dabb04016" config-ref="Accounts_API_Config" account-name="#[vars.cname]" user-id="#[vars.ID]" client-id="${accounts.client_id}" client-secret="${accounts.client_secret}">
+					<error-mapping sourceType="ACCOUNTS-API:INTERNAL_SERVER_ERROR" targetType="APP:SERVER_SIDE_INTERNAL_SERVER_ERROR" />
+				</accounts-api:get-accounts>
+			</route>
+			<route >
+				<accounts-api:get-accounts doc:name="Get accounts by type" doc:id="36f0a2cc-2901-4985-ae36-af409c8e5336" config-ref="Accounts_API_Config" account-type="#[vars.ctype]" user-id="#[vars.ID]" client-id="${accounts.client_id}" client-secret="${accounts.client_secret}"/>
+			</route>
+		</scatter-gather>
+		<ee:transform doc:name="Get Accounts" doc:id="1c6f8c2e-b607-4fe1-a9b9-fcba43e3faee">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+
+---
+flatten(payload..*payload) ]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="name_type" doc:id="1bd8f067-c8c2-42fa-82a8-30c5883e025f" >
+		<set-variable value="#[attributes.queryParams.account_name]" doc:name="cname" doc:id="6fafb599-6d45-4d69-adbf-e9fff65ad557" variableName="cname" />
+		<set-variable value="#[attributes.queryParams.account_type default 'business']" doc:name="ctype" doc:id="8ff856fa-9c65-44f2-8616-4ab52a7be444" variableName="ctype" />
+		<validation:is-true doc:name="is_valid_account_type" doc:id="3e38470a-88b7-42a8-ab6f-7de9b401c927" expression="#[['business','personal'] contains vars.ctype]" message='"Invalid type"'>
+			<error-mapping sourceType="VALIDATION:INVALID_BOOLEAN" targetType="APP:INVALID_ACCOUNTTYPE" />
+		</validation:is-true>
+		<set-variable value="#[attributes.queryParams.condition default 'AND']" doc:name="condition" doc:id="dffefdd8-08f8-468b-851a-8061655c7cfa" variableName="condition"/>
+		<validation:is-true doc:name="is_valid_condition" doc:id="f731cc81-d99b-436b-a6e3-44ad2bfdd934" expression="#[['OR','AND'] contains vars.condition]" message='"Invalid condition"'>
+			<error-mapping sourceType="VALIDATION:INVALID_BOOLEAN" targetType="APP:INVALID_CONDITION" />
+		</validation:is-true>
+	</flow>
+	<flow name="ref_for_last_logger" doc:id="479ac079-bf63-4eec-a01a-5085a1fd31cb" >
+		<logger level="INFO" doc:name="Logger" doc:id="d8adf0a3-cfbc-4ce3-a4d9-ff5cac6e5a3a" />
+	</flow>
+	<flow name="ref_for_flogger_var" doc:id="71a85115-59b5-45b7-9b2e-389582edb97b">
+		<logger level="INFO" doc:name="First Logger" doc:id="9bfafa6d-1cf3-477d-abb2-1e49bbecba58" />
+		<set-variable value="#[attributes.headers.user_id]" doc:name="ID" doc:id="0ba40ab6-734e-4e9e-9d72-5052d16f3877" variableName="ID" />
+	</flow>
+	<flow name="PostAccounts" doc:id="0146f269-fd4f-4f0f-ac9c-cd64fc42ae20" >
+		<http:listener doc:name="Post /accounts" doc:id="073e6e61-b916-4851-beb0-22e33b50bf32" config-ref="HTTP_Listener_config" path="/accounts" allowedMethods="POST"/>
+		<flow-ref doc:name="ref_for_flogger_var" doc:id="1a2d083a-bea7-4308-b818-937aebae2608" name="ref_for_flogger_var"/>
+		<vm:publish doc:name="Publish" doc:id="86a38ed4-cf82-4cee-8d6c-b869d5d967cb" config-ref="VM_Config" queueName="output">
+			<vm:content ><![CDATA[#[output application/json
+---
+{
+	user_id: vars.ID,
+	accounts: payload
+}]]]></vm:content>
+		</vm:publish>
+		<ee:transform doc:name="Transform Message" doc:id="d90e6c93-a947-45be-be63-4d56a9b3c846" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message": "Accounts submitted"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<flow-ref doc:name="Flow Reference" doc:id="9fa11d08-83e7-4d80-9166-65f8b3fab7ab" name="ref_for_last_logger"/>
+	</flow>
+	<flow name="Postvmqueue" doc:id="6a29a5c1-3c53-4fe7-bcf6-01d3156a313f" >
+		<vm:listener queueName="output" doc:name="Listener" doc:id="ae540870-2a46-4e12-8b86-c3d7acfc5f5f" config-ref="VM_Config">
+		</vm:listener>
+		<logger level="INFO" doc:name="First Logger" doc:id="ad03c2f6-0d9a-403f-9a7a-1f7f98a368ed"/>
+		<accounts-api:create-account doc:name="Create account" doc:id="56a38dfb-7d50-40c2-8568-624af34661b8" config-ref="Accounts_API_Config" user-id="#[payload.user_id]" client-id="${accounts.client_id}" client-secret="${accounts.client_secret}">
+			<accounts-api:create-account-request-data ><![CDATA[#[payload.accounts]]]></accounts-api:create-account-request-data>
+		</accounts-api:create-account>
+		<flow-ref doc:name="Flow Reference" doc:id="f33e41ed-f7c3-4d56-a289-a3a58499ba26" name="ref_for_last_logger"/>
+	</flow>
+</mule>

@@ -1,0 +1,19 @@
+{
+  "sampleData": {
+    "dcd660eb-e778-4a77-a784-23e62148c479": {
+      "payload": "sample_data/list_json.json"
+    },
+    "42ce0363-4f1f-426b-ae86-d1166646e5de": {
+      "payload": "sample_data/java.dwl"
+    },
+    "13d2ec49-a3a4-4681-9960-b39d16ae9df7": {
+      "payload": "sample_data/java_1.dwl"
+    },
+    "0f3c9271-a255-4696-87db-2ac2a6272907": {
+      "payload": "sample_data/java_2.dwl"
+    },
+    "96dd3612-d3e8-41cc-a2c6-9308ee9c3191": {
+      "payload": "sample_data/transactions.xml"
+    }
+  }
+}

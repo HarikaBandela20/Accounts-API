@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:wsc="http://www.mulesoft.org/schema/mule/wsc"
+	xmlns:accounts-api="http://www.mulesoft.org/schema/mule/accounts-api"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:vm="http://www.mulesoft.org/schema/mule/vm"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd 
+http://www.mulesoft.org/schema/mule/vm http://www.mulesoft.org/schema/mule/vm/current/mule-vm.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/accounts-api http://www.mulesoft.org/schema/mule/accounts-api/current/mule-accounts-api.xsd
+http://www.mulesoft.org/schema/mule/wsc http://www.mulesoft.org/schema/mule/wsc/current/mule-wsc.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="d92d242c-8a12-4ae8-8c47-4f801fe1757a" >
+		<http:listener-connection host="0.0.0.0" port="${http.port}" />
+	</http:listener-config>
+	<http:request-config name="HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="dc41570e-44fd-4b50-a763-8373a523ad44" >
+		<http:request-connection host="${accounts.host}" port="${accounts.port}" />
+	</http:request-config>
+	<vm:config name="VM_Config" doc:name="VM Config" doc:id="e18f274a-d564-47b2-8f76-d83b95235e6c" >
+		<vm:queues >
+			<vm:queue queueName="output" />
+		</vm:queues>
+	</vm:config>
+	<configuration-properties doc:name="Configuration properties" doc:id="f6962bbd-a266-4bdb-a51b-695778b11d59" file="config.yaml" />
+	<accounts-api:config name="Accounts_API_Config" doc:name="Accounts API Config" doc:id="58e4074c-dc2d-4779-bf23-481e1bc1e0e2" property_host="${accounts.host}" property_port="${accounts.port}" property_basePath="${accounts.basePath}" property_protocol="${accounts.protocol}" property_responseTimeout="300000" />
+	<wsc:config name="Web_Service_Consumer_Config" doc:name="Web Service Consumer Config" doc:id="7ae8c5fb-33a8-4ca5-86f0-86e87e0161df" >
+		<wsc:connection wsdlLocation="${transactions.wsdl}" address="${transactions.address}" service="${transactions.service}" port="${transactions.port}"/>
+	</wsc:config>
+</mule>

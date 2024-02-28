@@ -1,0 +1,4 @@
+%dw 2.0
+
+type auto_71a85115_59b5_45b7_9b2e_389582edb97b_Output_Variables_ID = Any
+
